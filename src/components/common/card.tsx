@@ -2,7 +2,7 @@ import Image from "next/image";
 import { useRouter } from "next/router";
 
 interface Props {
-  id: number;
+  id?: number | string;
   title: string;
   description: string;
   src: string;

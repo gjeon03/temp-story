@@ -1,11 +1,17 @@
 import { useMutation, UseMutationOptions } from "react-query";
 import { BASE_URL, DefaultResponse } from "../utils/fetcher";
 import { AiContentInfo } from "@/context/form-context";
+import { generateParagraph } from "@/mocks/data/generate";
 
-interface GenerateResponse {
-  genRes1: string;
-  genRes2: string;
-  genRes3: string;
+export interface GenerateResponseItem {
+  title: string;
+  content: string;
+}
+
+export interface GenerateResponse {
+  genRes1: GenerateResponseItem;
+  genRes2: GenerateResponseItem;
+  genRes3: GenerateResponseItem;
 }
 
 export interface GenerateImageInfo {
@@ -15,7 +21,7 @@ export interface GenerateImageInfo {
 }
 
 interface GenerateMutation {
-  imgInfo: GenerateImageInfo;
+  imgInfo: GenerateImageInfo[];
   ogText: string;
 }
 
@@ -25,14 +31,31 @@ const useGenerateMutation = (
   return useMutation({
     mutationKey: "generate",
     mutationFn: async (data: GenerateMutation) => {
-      const response = await fetch(`${BASE_URL}/blog/generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-      return response.json();
+      try {
+        const response = await fetch(`/api/generate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        console.log("response", response);
+
+        if (!response.ok) {
+          throw new Error("Request failed");
+        }
+
+        return response.json();
+      } catch (error) {
+        console.error("Request failed, loading mock data:", error);
+        // Return mock data on failure
+        return {
+          genRes1: generateParagraph(),
+          genRes2: generateParagraph(),
+          genRes3: generateParagraph(),
+        };
+      }
     },
     ...options,
   });

@@ -1,9 +1,6 @@
 import { useMutation, UseMutationOptions } from "react-query";
 import { BASE_URL } from "../utils/fetcher";
-
-interface BlogPostResponse {
-  postId: string;
-}
+import { saveBlogPost } from "@/utils/indexed-db";
 
 export interface ImageSaveInfo {
   fileName: string;
@@ -11,9 +8,11 @@ export interface ImageSaveInfo {
   geoLong: string;
   imgDtm: string;
   thumbYn: "Y" | "N";
+  imgStream?: string;
 }
 
-interface BlogPost {
+export interface BlogPost {
+  postId?: number;
   title: string;
   ogText: string;
   aiGenText: string;
@@ -22,7 +21,7 @@ interface BlogPost {
 }
 
 const useBlogPostMutation = (
-  options: UseMutationOptions<BlogPostResponse, Error, unknown>,
+  options: UseMutationOptions<number, Error, unknown>,
 ) => {
   return useMutation({
     mutationKey: "blogPost",
@@ -48,42 +47,62 @@ const useBlogPostMutation = (
         ogText: data.ogText,
         aiGenText: data.aiGenText,
         imgSaveList: data.imgSaveList, // imgSaveList 포함
-      };
+      } as BlogPost;
 
-      // JSON 문자열로 변환하여 FormData에 추가
-      formData.append("blogPost", JSON.stringify(blogPost));
+      // IndexedDB에 데이터 저장
+      let savedId: number | null = null;
+      try {
+        savedId = await saveBlogPost(blogPost); // IndexedDB에 저장
+        console.log("Blog post saved to IndexedDB:", blogPost);
+      } catch (err) {
+        console.error("Failed to save blog post to IndexedDB:", err);
+      }
 
-      // 파일 추가
+      // 파일 처리 (현재는 IndexedDB에 저장하지 않음)
       if (data.files && data.files.length > 0) {
-        data.files.forEach((file, index) => {
-          formData.append(`files[${index}]`, file);
-        });
+        console.log("Files provided:", data.files);
       } else {
         console.error("No files found in the 'files' array");
       }
 
-      for (const [key, value] of formData.entries()) {
-        console.log("key", key);
-        console.log("value", value);
-        if (value instanceof File) {
-          console.log(
-            `${key}: ${value.name}, size: ${(value.size / 1024 / 1024).toFixed(2)} MB`,
-          );
-        } else {
-          console.log(`${key}: ${value}`);
-        }
-      }
+      // IndexedDB에 저장된 id 반환
+      return Promise.resolve(savedId as number);
 
-      const response = await fetch(`${BASE_URL}/blog/save`, {
-        method: "POST",
-        body: formData,
-      });
+      // 백엔드
+      // JSON 문자열로 변환하여 FormData에 추가
+      // formData.append("blogPost", JSON.stringify(blogPost));
 
-      if (!response.ok) {
-        throw new Error("Failed to upload blog post");
-      }
+      // // 파일 추가
+      // if (data.files && data.files.length > 0) {
+      //   data.files.forEach((file, index) => {
+      //     formData.append(`files[${index}]`, file);
+      //   });
+      // } else {
+      //   console.error("No files found in the 'files' array");
+      // }
 
-      return response.json();
+      // for (const [key, value] of formData.entries()) {
+      //   console.log("key", key);
+      //   console.log("value", value);
+      //   if (value instanceof File) {
+      //     console.log(
+      //       `${key}: ${value.name}, size: ${(value.size / 1024 / 1024).toFixed(2)} MB`,
+      //     );
+      //   } else {
+      //     console.log(`${key}: ${value}`);
+      //   }
+      // }
+
+      // const response = await fetch(`${BASE_URL}/blog/save`, {
+      //   method: "POST",
+      //   body: formData,
+      // });
+
+      // if (!response.ok) {
+      //   throw new Error("Failed to upload blog post");
+      // }
+
+      // return response.json();
     },
     ...options,
   });

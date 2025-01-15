@@ -17,7 +17,9 @@ export default function Preview() {
   const [selectIndex, setSelectIndex] = useState<number>(0);
   const [contentData, setContentData] = useState<ContentData>();
   const [htmlContent, setHtmlContent] = useState<string>();
-  const [value, setValue] = useState<string>("");
+  const [value, setValue] = useState<string>(
+    aiContent[aiContentIndex as number].title,
+  );
 
   // const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const { value } = e.target;
@@ -40,6 +42,9 @@ export default function Preview() {
     if (aiContent && images && aiContentIndex !== undefined) {
       const data = aiContent[aiContentIndex];
       const imagesData = images?.map((image) => image.previewUrl) || [];
+
+      console.log("title", data.title);
+
       setContentData({
         title: data.title,
         description: data.content,
@@ -67,6 +72,11 @@ export default function Preview() {
         setHtmlContent(htmlContent);
       })();
   }, [contentData]);
+
+  useEffect(() => {
+    console.log("iaContent", aiContent);
+    setValue(aiContent[aiContentIndex as number].title);
+  }, [aiContent]);
 
   const autoResize = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const textarea = e.target;
@@ -115,7 +125,7 @@ export default function Preview() {
               ))}
             </div>
             {htmlContent && (
-              <div>
+              <div className="prose">
                 <p
                   className="text-[16px] leading-6 tracking-tight"
                   dangerouslySetInnerHTML={{

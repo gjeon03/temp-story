@@ -45,20 +45,22 @@ export default function DescriptionForm() {
   const { mutate } = useGenerateMutation({
     onSuccess: (data) => {
       setIsLoading(false);
-      setAiContent([
-        {
-          title: "",
-          content: data.genRes1,
-        },
-        {
-          title: "",
-          content: data.genRes2,
-        },
-        {
-          title: "",
-          content: data.genRes3,
-        },
-      ]);
+      console.log("data", data);
+      setAiContent([data.genRes1, data.genRes2, data.genRes3]);
+      // setAiContent([
+      //   {
+      //     title: "",
+      //     content: data.genRes1,
+      //   },
+      //   {
+      //     title: "",
+      //     content: data.genRes2,
+      //   },
+      //   {
+      //     title: "",
+      //     content: data.genRes3,
+      //   },
+      // ]);
     },
     onError: () => {
       setIsLoading(false);
@@ -84,11 +86,16 @@ export default function DescriptionForm() {
       ...images.map((image) => new Date(image.createDate).getTime()),
     );
 
-    const imgInfo: GenerateImageInfo = {
-      geoLat: images[0].lat.toString(),
-      geoLong: images[0].lon.toString(),
-      imgDtm: new Date(earliestDate).toISOString(), // ISO 형식으로 변환
-    };
+    // const imgInfo: GenerateImageInfo = {
+    //   geoLat: images[0].lat.toString(),
+    //   geoLong: images[0].lon.toString(),
+    //   imgDtm: new Date(earliestDate).toISOString(), // ISO 형식으로 변환
+    // };
+    const imgInfo: GenerateImageInfo[] = images.map((image) => ({
+      geoLat: image.lat.toString(),
+      geoLong: image.lon.toString(),
+      imgDtm: new Date(image.createDate).toISOString(),
+    }));
 
     mutate({ ogText: description, imgInfo });
   };
